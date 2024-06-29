@@ -1,0 +1,95 @@
+# How to build libtorch locally
+python setup.py develop
+
+# Example cmake configuration
+-- ******** Summary ********
+-- General:
+--   CMake version         : 3.29.6
+--   CMake command         : /opt/homebrew/Cellar/cmake/3.29.6/bin/cmake
+--   System                : Darwin
+--   C++ compiler          : /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++
+--   C++ compiler id       : AppleClang
+--   C++ compiler version  : 15.0.0.15000309
+--   Using ccache if found : ON
+--   Found ccache          : CCACHE_PROGRAM-NOTFOUND
+--   CXX flags             :  -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DTMP_USE_TSC_AS_TIMESTAMP -DLIBKINETO_NOCUPTI -DLIBKINETO_NOROCTRACER -DUSE_PYTORCH_QNNPACK -DAT_BUILD_ARM_VEC256_WITH_SLEEF -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=braced-scalar-init -Werror=range-loop-construct -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-strict-overflow -Wno-strict-aliasing -Wvla-extension -Wsuggest-override -Wnewline-eof -Winconsistent-missing-override -Winconsistent-missing-destructor-override -Wno-pass-failed -Wno-error=pedantic -Wno-error=old-style-cast -Wno-error=inconsistent-missing-override -Wno-error=inconsistent-missing-destructor-override -Wconstant-conversion -Wno-invalid-partial-specialization -Wno-missing-braces -Qunused-arguments -fcolor-diagnostics -faligned-new -Wno-unused-but-set-variable -fno-math-errno -fno-trapping-math -Werror=format -DUSE_MPS -Wno-unused-private-field -Wno-missing-braces
+--   Shared LD flags       :  -rdynamic -weak_framework Foundation -weak_framework MetalPerformanceShaders -weak_framework MetalPerformanceShadersGraph -weak_framework Metal
+--   Static LD flags       : 
+--   Module LD flags       : 
+--   Build type            : Release
+--   Compile definitions   : ONNX_ML=1;ONNXIFI_ENABLE_EXT=1;ONNX_NAMESPACE=onnx_torch;HAVE_MMAP=1;_FILE_OFFSET_BITS=64;HAVE_SHM_OPEN=1;HAVE_SHM_UNLINK=1;USE_EXTERNAL_MZCRC;MINIZ_DISABLE_ZIP_READER_CRC32_CHECKS;FLASHATTENTION_DISABLE_ALIBI;AT_BUILD_ARM_VEC256_WITH_SLEEF
+--   CMAKE_PREFIX_PATH     : /Users/chengcli/torch/lib/python3.12/site-packages
+--   CMAKE_INSTALL_PREFIX  : /Users/chengcli/Development/libtorch/torch
+--   USE_GOLD_LINKER       : OFF
+-- 
+--   TORCH_VERSION         : 2.5.0
+--   BUILD_STATIC_RUNTIME_BENCHMARK: OFF
+--   BUILD_BINARY          : OFF
+--   BUILD_CUSTOM_PROTOBUF : ON
+--     Link local protobuf : ON
+--   BUILD_DOCS            : OFF
+--   BUILD_PYTHON          : True
+--     Python version      : 3.12.3
+--     Python executable   : /Users/chengcli/torch/bin/python
+--     Python library      : /opt/homebrew/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/lib/libpython3.12.dylib
+--     Python includes     : /opt/homebrew/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/include/python3.12
+--     Python site-package : /Users/chengcli/torch/lib/python3.12/site-packages
+--   BUILD_SHARED_LIBS     : ON
+--   CAFFE2_USE_MSVC_STATIC_RUNTIME     : OFF
+--   BUILD_TEST            : True
+--   BUILD_JNI             : OFF
+--   BUILD_MOBILE_AUTOGRAD : OFF
+--   BUILD_LITE_INTERPRETER: OFF
+--   CROSS_COMPILING_MACOSX : 
+--   INTERN_BUILD_MOBILE   : 
+--   TRACING_BASED         : OFF
+--   USE_BLAS              : 1
+--     BLAS                : accelerate
+--     BLAS_HAS_SBGEMM     : 
+--   USE_LAPACK            : 1
+--     LAPACK              : accelerate
+--   USE_ASAN              : OFF
+--   USE_TSAN              : OFF
+--   USE_CPP_CODE_COVERAGE : OFF
+--   USE_CUDA              : OFF
+--   USE_XPU               : OFF
+--   USE_ROCM              : OFF
+--   BUILD_NVFUSER         : 
+--   USE_EIGEN_FOR_BLAS    : ON
+--   USE_FBGEMM            : OFF
+--     USE_FAKELOWP          : OFF
+--   USE_KINETO            : ON
+--   USE_GFLAGS            : OFF
+--   USE_GLOG              : OFF
+--   USE_LITE_PROTO        : OFF
+--   USE_PYTORCH_METAL     : OFF
+--   USE_PYTORCH_METAL_EXPORT     : OFF
+--   USE_MPS               : ON
+--   USE_MKL               : OFF
+--   USE_MKLDNN            : OFF
+--   USE_UCC               : OFF
+--   USE_ITT               : OFF
+--   USE_NCCL              : OFF
+--   USE_NNPACK            : ON
+--   USE_NUMPY             : OFF
+--   USE_OBSERVERS         : ON
+--   USE_OPENCL            : OFF
+--   USE_OPENMP            : OFF
+--   USE_MIMALLOC          : OFF
+--   USE_VULKAN            : OFF
+--   USE_PROF              : OFF
+--   USE_PYTORCH_QNNPACK   : ON
+--   USE_XNNPACK           : ON
+--   USE_DISTRIBUTED       : OFF
+--   Public Dependencies  : 
+--   Private Dependencies : Threads::Threads;pthreadpool;cpuinfo;pytorch_qnnpack;nnpack;XNNPACK;fp16;foxi_loader;fmt::fmt-header-only;kineto
+--   Public CUDA Deps.    : 
+--   Private CUDA Deps.   : 
+--   USE_COREML_DELEGATE     : OFF
+--   BUILD_LAZY_TS_BACKEND   : ON
+--   USE_ROCM_KERNEL_ASSERT : OFF
+-- Configuring done (29.0s)
+-- Generating done (1.6s)
+-- Build files have been written to: /Users/chengcli/Development/libtorch/build
+
+
