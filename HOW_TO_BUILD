@@ -1,5 +1,7 @@
 # How to build libtorch locally
-python setup.py develop
+CMAKE_INSTALL_DIR=XX python setup.py develop
+
+python setup.py install
 
 # Example cmake configuration
 -- ******** Summary ********
@@ -92,4 +94,239 @@ python setup.py develop
 -- Generating done (1.6s)
 -- Build files have been written to: /Users/chengcli/Development/libtorch/build
 
+## How to use tensor
+https://stackoverflow.com/questions/59676983/in-torch-c-api-how-to-write-to-the-internal-data-of-a-tensor-fastly
 
+This version is very slow:
+```cpp
+    torch::Tensor tensor = torch::empty({1000, 1000});
+    for(int i=0; i < 1000; i++)
+    {
+        for(int j=0 ; j < 1000; j++)
+        {
+            tensor[i][j] = calc_tensor_data(i,j);
+        }
+    }
+```
+
+Use the following version to properly access the point-wise tensor data:
+```cpp
+    torch::Tensor tensor = torch::empty({1000, 1000});
+    auto accessor = tensor.accessor<float,2>();
+    for(int i=0; i < 1000; i++)
+    {
+        for(int j=0 ; j < 1000; j++)
+        {
+            accessor[i][j] = calc_tensor_data(i,j);
+        }
+    }
+```
+
+## How to use your operator
+https://pytorch.org/tutorials/advanced/torch_script_custom_ops.html
+
+```python
+import torch
+x = torch.tensor([1.0, 2.0, 3.0])
+y = torch.ops.Euler.cons2prim(x)
+
+## How to write a kernel, an example of special function
+
+Here we use the example of special function, the entropy function,
+to show how to write a custom kernel. The entropy function is defined as:
+
+```math
+H(x) = -x * log(x)
+```
+
+For a positive value of x. If x is zero, we define H(x) = 0.
+If x is negative, we define H(x) = -inf.
+This function is evaluated element-wise on any input tensor.
+
+To begin with, add the following two entries to the `native_functions.yaml` file:
+
+```yaml
+- func: special_entr(Tensor self) -> Tensor
+  structured_delegate: special_entr.out
+  python_module: special
+  variants: function
+  tags: pointwise
+
+- func: special_entr.out(Tensor self, *, Tensor(a!) out) -> Tensor(a!)
+  structured: True
+  structured_inherits: TensorIteratorBase
+  python_module: special
+  variants: function
+  dispatch:
+    CPU, CUDA: special_entr_out
+  tags: pointwise
+```
+
+This declares the `special_entr` function, which takes a single input tensor and returns a single output tensor.
+The second entry declares the `special_entr.out` function, which takes an input tensor and an output tensor, and writes the result to the output tensor.
+The first function has immutable input, while the second function is mutable.
+
+Using the `structured_delegate` and `structured_inherits` fields, we can specify that the second function is a structured delegate of the first function.
+This means that the second function is a structured function that is called by the first function.
+
+Using the `torchgen/gen.py` script, we can generate header files for the functions:
+
+build/aten/src/ATen/ops
+special_entr.h
+special_entr_native.h
+special_entr_ops.h
+special_entr_cpu_dispatch.h
+special_entr_cuda_dispatch.h
+
+Particular, the `special_entr_ops.h` file declares the structure delegate in namespace at::_ops
+```cpp file
+namespace at {
+namespace _ops {
+
+struct TORCH_API special_entr {
+  using schema = at::Tensor (const at::Tensor &);
+  using ptr_schema = schema*;
+  // See Note [static constexpr char* members for windows NVCC]
+  STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA(name, "aten::special_entr")
+  STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA(overload_name, "")
+  STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA(schema_str, "special_entr(Tensor self) -> Tensor")
+  static at::Tensor call(const at::Tensor & self);
+  static at::Tensor redispatch(c10::DispatchKeySet dispatchKeySet, const at::Tensor & self);
+};
+
+struct TORCH_API special_entr_out {
+  using schema = at::Tensor & (const at::Tensor &, at::Tensor &);
+  using ptr_schema = schema*;
+  // See Note [static constexpr char* members for windows NVCC]
+  STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA(name, "aten::special_entr")
+  STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA(overload_name, "out")
+  STATIC_CONSTEXPR_STR_INL_EXCEPT_WIN_CUDA(schema_str, "special_entr.out(Tensor self, *, Tensor(a!) out) -> Tensor(a!)")
+  static at::Tensor & call(const at::Tensor & self, at::Tensor & out);
+  static at::Tensor & redispatch(c10::DispatchKeySet dispatchKeySet, const at::Tensor & self, at::Tensor & out);
+};
+
+} // namespace _ops
+} // namespace at
+```
+
+The `special_entr.h` file declares the API function in namespace at
+```cpp file
+namespace at {
+
+// aten::special_entr(Tensor self) -> Tensor
+inline at::Tensor special_entr(const at::Tensor & self) {
+    return at::_ops::special_entr::call(self);
+}
+
+// aten::special_entr.out(Tensor self, *, Tensor(a!) out) -> Tensor(a!)
+inline at::Tensor & special_entr_out(at::Tensor & out, const at::Tensor & self) {
+    return at::_ops::special_entr_out::call(self, out);
+}
+// aten::special_entr.out(Tensor self, *, Tensor(a!) out) -> Tensor(a!)
+inline at::Tensor & special_entr_outf(const at::Tensor & self, at::Tensor & out) {
+    return at::_ops::special_entr_out::call(self, out);
+}
+
+} // namespace at
+```
+
+The actual dispatch functions have the same name but in different namespaces, `at::cpu` and `at::cuda`, respectively.
+E.g., the `special_entr_cpu_dispatch.h` file declares the CPU dispatch function in namespace at::cpu
+```cpp file
+namespace at {
+namespace cpu {
+
+TORCH_API at::Tensor special_entr(const at::Tensor & self);
+TORCH_API at::Tensor & special_entr_out(at::Tensor & out, const at::Tensor & self);
+TORCH_API at::Tensor & special_entr_outf(const at::Tensor & self, at::Tensor & out);
+
+} // namespace cpu
+} // namespace at
+```
+
+The `special_entr_cuda_dispatch.h` file declares the CUDA dispatch function in namespace at::cuda
+```cpp file 
+namespace at {
+namespace cuda {
+
+TORCH_API at::Tensor special_entr(const at::Tensor & self);
+TORCH_API at::Tensor & special_entr_out(at::Tensor & out, const at::Tensor & self);
+TORCH_API at::Tensor & special_entr_outf(const at::Tensor & self, at::Tensor & out);
+
+} // namespace cuda
+} // namespace at
+```
+
+
+Additionally, the `RegisterCPU.cpp` registers the structuring function for the CPU backend:
+
+```cpp
+struct structured_special_entr_out_functional final : public at::native::structured_special_entr_out {
+  ...
+  std::array<Tensor, 1> outputs_;
+}
+
+struct structured_special_entr_out_out final : public at::native::structured_special_entr_out {
+  ...
+  std::array<std::reference_wrapper<Tensor>, 1> outputs_;
+  std::array<::std::optional<Tensor>, 1> proxy_outputs_;
+}
+```
+
+And wrapper functions:
+```cpp
+at::Tensor wrapper_CPU_special_entr(const at::Tensor & self) {
+  structured_special_entr_out_functional op;
+  op.meta(self);
+  op.impl(self, op.outputs_[0]);
+  return std::move(op.outputs_[0]);
+}
+
+at::Tensor & wrapper_CPU_special_entr_out_out(const at::Tensor & self, at::Tensor & out) {
+  structured_special_entr_out_out op(out);
+  op.meta(self);
+  op.impl(self, op.maybe_get_output(0));
+  if (op.proxy_outputs_[0].has_value()) op.outputs_[0].get().copy_(*op.proxy_outputs_[0]);
+  return out;
+}
+```
+
+In `UnaryOps.cpp`, the actual implementation of the function is defined:
+```cpp
+CREATE_UNARY_FLOAT_META_FUNC(special_entr)
+CREATE_UNARY_TORCH_IMPL_FUNC(special_entr_out, special_entr_stub)
+DEFINE_DISPATCH(special_entr_stub);
+```
+
+The actual function that does the calculation is the `special_entr_stub` function, which is defined in `cpu/UnaryOpsKernel.cpp`:
+```cpp
+static void entr_kernel(TensorIteratorBase& iter) {
+  REGISTER_DISPATCH(special_entr_stub, &CPU_CAPABILITY::entr_kernel);
+  AT_DISPATCH_FLOATING_TYPES_AND2(
+      kBFloat16, kHalf, iter.common_dtype(), "entr_cpu", [&] {
+        cpu_kernel(iter, [](scalar_t x) -> scalar_t {
+          if (at::_isnan(x)) {
+            return x;
+          } else if (x > 0) {
+            return -x * std::log(x);
+          } else if (x == 0) {
+            return static_cast<scalar_t>(0);
+          }
+          return static_cast<scalar_t>(-INFINITY);
+        });
+      });
+}
+```
+
+Similarly, the CUDA implementation is defined in `cuda/UnaryOpsKernel.cu`:
+```cpp
+      AT_DISPATCH_COMPLEX_TYPES_AND(kComplexHalf, common_dtype, "rsqrt_cuda", [&]() {
+        gpu_kernel(iter, []GPU_LAMBDA(scalar_t a) -> scalar_t {
+          using opmath_t = at::opmath_type<scalar_t>;
+          return rsqrt_wrapper(static_cast<opmath_t>(a));
+        });
+      });
+```
+
+# other links
+https://support.huawei.com/enterprise/en/doc/EDOC1100191776/9f8c105f/registering-operator-development
