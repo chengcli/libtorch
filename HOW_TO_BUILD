@@ -1,7 +1,14 @@
 # How to build libtorch locally
 CMAKE_INSTALL_DIR=XX python setup.py develop
 
+This steps up an egg.link to torch directory, `torch.egg-link`
+```
+/Users/chengcli/Development/libtorch
+.
+```
+
 python setup.py install
+
 
 # Example cmake configuration
 -- ******** Summary ********
@@ -330,3 +337,5 @@ Similarly, the CUDA implementation is defined in `cuda/UnaryOpsKernel.cu`:
 
 # other links
 https://support.huawei.com/enterprise/en/doc/EDOC1100191776/9f8c105f/registering-operator-development
+https://docs.google.com/document/d/1YA4ZG0eTywBv-5Nlaejo9Ho-r95KJZZ4c1t37EPlJQk/edit
+https://docs.google.com/presentation/d/1hvh4pAqdbbFd0WMaZRoUp_ZLue7vTzoKCCg30Xg7H-0/edit#slide=id.gc36d913cc7_2_84

@@ -2,6 +2,7 @@
 
 #ifndef AT_PER_OPERATOR_HEADERS
 #include <ATen/Functions.h>
+#include <ATen/NativeFunctions.h>
 #else
 #include <ATen/ops/empty.h>
 #include <ATen/ops/cons2prim_native.h>
@@ -41,7 +42,7 @@ namespace at::native {
   TORCH_API at::Tensor euler_cons2prim_cpu(const at::Tensor & cons) {
     TORCH_CHECK(cons.is_contiguous(), "cons must be contiguous");
 
-    auto prim = at::empty(cons.sizes(), cons.options());
+    Tensor prim = at::empty(cons.sizes(), cons.options());
     euler_cons2prim_cpu_out(cons, prim);
 
     return prim;

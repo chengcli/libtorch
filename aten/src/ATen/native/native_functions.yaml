@@ -15668,13 +15668,15 @@
 - func: _propagate_xla_data(Tensor input, Tensor output) -> ()
   variants: function
 
-- func: euler::cons2prim(Tensor cons) -> Tensor
+- func: cons2prim(Tensor cons) -> Tensor
+  python_module: euler
   variants: function
   dispatch:
     CPU: euler_cons2prim_cpu
   tags: pointwise
 
-- func: euler::cons2prim.out(Tensor cons, *, Tensor(a!) out) -> Tensor(a!)
+- func: cons2prim.out(Tensor cons, *, Tensor(a!) out) -> Tensor(a!)
+  python_module: euler
   variants: function
   dispatch:
     CPU: euler_cons2prim_cpu_out
