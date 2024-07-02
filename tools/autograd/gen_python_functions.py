@@ -227,6 +227,10 @@ def is_py_torch_function(f: NativeFunction) -> bool:
     return f.python_module is None and Variant.function in f.variants
 
 
+def is_py_euler_function(f: NativeFunction) -> bool:
+    return f.python_module == "euler"
+
+
 def is_py_nn_function(f: NativeFunction) -> bool:
     return f.python_module == "nn"
 
@@ -295,6 +299,16 @@ def gen(
         "python_torch_functions.cpp",
         method=False,
         num_shards=3,
+        symint=symint,
+    )
+
+    create_python_bindings(
+        fm,
+        functions,
+        is_py_euler_function,
+        "torch.euler",
+        "python_euler_functions.cpp",
+        method=False,
         symint=symint,
     )
 
@@ -977,6 +991,7 @@ if(check_has_torch_function(self_)) {{
         {
             "torch": "THPVariableFunctionsModule",
             "torch.nn": "THPNNVariableFunctionsModule",
+            "torch.euler": "THPEulerVariableFunctionsModule",
             "torch.fft": "THPFFTVariableFunctionsModule",
             "torch.linalg": "THPLinalgVariableFunctionsModule",
             "torch.nested": "THPNestedVariableFunctionsModule",

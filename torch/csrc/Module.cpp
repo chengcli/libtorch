@@ -63,6 +63,7 @@
 #include <torch/csrc/autograd/python_nn_functions.h>
 #include <torch/csrc/autograd/python_sparse_functions.h>
 #include <torch/csrc/autograd/python_special_functions.h>
+#include <torch/csrc/autograd/python_euler_functions.h>
 #include <torch/csrc/autograd/python_variable.h>
 #include <torch/csrc/cpu/Module.h>
 #include <torch/csrc/dynamo/init.h>
@@ -1674,6 +1675,7 @@ PyObject* initModule() {
   torch::functorch::impl::initFuncTorchBindings(module);
   torch::throughput_benchmark::initThroughputBenchmarkBindings(module);
   torch::autograd::initReturnTypes(module);
+  torch::autograd::initEulerFunctions(module);
   torch::autograd::initNNFunctions(module);
   torch::autograd::initFFTFunctions(module);
   torch::autograd::initLinalgFunctions(module);
