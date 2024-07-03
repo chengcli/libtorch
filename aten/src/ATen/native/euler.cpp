@@ -9,7 +9,7 @@
 #endif
 
 namespace at::native {
-  TORCH_API at::Tensor & euler_cons2prim_cpu_out(
+  TORCH_API at::Tensor & euler_cons2prim_out_cpu(
       const at::Tensor & cons, double gammad, at::Tensor & prim) 
   {
     TORCH_CHECK(cons.is_contiguous(), "cons must be contiguous");
@@ -54,7 +54,7 @@ namespace at::native {
     TORCH_CHECK(cons.is_contiguous(), "cons must be contiguous");
 
     Tensor prim = at::empty(cons.sizes(), cons.options());
-    euler_cons2prim_cpu_out(cons, gammad, prim);
+    euler_cons2prim_out_cpu(cons, gammad, prim);
 
     return prim;
   }

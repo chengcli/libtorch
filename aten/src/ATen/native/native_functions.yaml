@@ -15679,5 +15679,6 @@
   python_module: euler
   variants: function
   dispatch:
-    CPU: euler_cons2prim_cpu_out
+    CPU: euler_cons2prim_out_cpu
+    MPS: euler_cons2prim_out_mps
   tags: pointwise
